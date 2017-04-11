@@ -29,6 +29,7 @@ class BookEdit extends Component {
   componentDidMount() {
     const { params } = this.props.navigation.state;
     if (params && params.book) {
+      // store info about edited book (if the book instance was passed through navigation for editing purpose)
       this.setState({
           book: {
             id: params.book.id,
@@ -51,7 +52,13 @@ class BookEdit extends Component {
     this.showMessage('Book added correctly!');
   }
   showMessage(msg) {
+
     if (Platform.OS === 'android') {
+      /* CustomToastAndroid is a name of the CustomToastModule class defined here 'android/app/src/main/java/com/awesomeproject/CustomToastModule.java' 
+        with the name given in overrided method 'getName()''
+        Methods available in JavaScript code are annotated with @ReactMethod in the above Java class.
+        In addition, there are also constants available like 'CustomToastAndroid.SHORT' listed in the overrided method 'getConstants()' in the above Java class.
+      */
       const CustomToastAndroid = require('./native.android').CustomToastAndroid;
       CustomToastAndroid.show(msg, CustomToastAndroid.SHORT);
     }
