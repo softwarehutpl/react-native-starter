@@ -5,13 +5,13 @@ import {
   TextInput,
   Button,
   View,
-  Alert,
   Platform
 } from 'react-native';
 import { connect } from 'react-redux';
 import { addBook, editBook } from './actions/books';
 import commonStyles from './styles/common';
 import styles from './styles/bookEdit';
+import ErrorableTextInput from './errorableTextInput';
 
 class BookEdit extends Component {
   state = {
@@ -26,16 +26,13 @@ class BookEdit extends Component {
   static navigationOptions = {
     title: ({ state }) => state.params && state.params.book ? 'Edit book' : 'New book',
   };
-  componentDidMount() {
+
+  componentWillMount() {
     const { params } = this.props.navigation.state;
     if (params && params.book) {
       // store info about edited book (if the book instance was passed through navigation for editing purpose)
       this.setState({
-          book: {
-            id: params.book.id,
-            title: params.book.title,
-            author: params.book.author
-          },
+          book: {...params.book},
           edit: true
       });
     }
@@ -52,7 +49,6 @@ class BookEdit extends Component {
     this.showMessage('Book added correctly!');
   }
   showMessage(msg) {
-
     if (Platform.OS === 'android') {
       /* CustomToastAndroid is a name of the CustomToastModule class defined here 'android/app/src/main/java/com/awesomeproject/CustomToastModule.java' 
         with the name given in overrided method 'getName()''
@@ -64,15 +60,23 @@ class BookEdit extends Component {
     }
   }
   validateInputs() {
-    if (this.refs.bookTitle.props.value && this.refs.bookAuthor.props.value) {
-      return true;
+    let valid = true;
+    this.refs.bookTitle.setError(null);
+    this.refs.bookAuthor.setError(null);
+    if (!this.state.book.title) {
+      valid = false;
+      this.refs.bookTitle.setError('Book needs to have a title');
+      this.refs.bookTitle.focus();
     }
-    //TODO: extend TextInput for Android and add method setError() which will show error inside the native TextInput
-    Alert.alert(
-      'Error',
-      'Book needs to have the title and author'
-    );
-    return false;
+    if (!this.state.book.author) {
+      valid = false;
+      if (ErrorableTextInput.supportsInlineErrorText()) {
+        // show second error only if we can display two errors at a time (it's silly to display two overlapping alerts)
+        this.refs.bookAuthor.setError('Book needs to have an author');
+        this.refs.bookAuthor.focus();
+      }
+    }
+    return valid;
   }
 
   render() {
@@ -80,7 +84,7 @@ class BookEdit extends Component {
       <View style={commonStyles.mainContainer}>
         <View style={{flexDirection: 'row'}}>
           <Text style={styles.label}>Title</Text>
-          <TextInput 
+          <ErrorableTextInput 
             ref='bookTitle'
             style={styles.input} 
             value={this.state.book.title}
@@ -93,7 +97,7 @@ class BookEdit extends Component {
         </View>
         <View style={{flexDirection: 'row'}}>
           <Text style={styles.label}>Author</Text>
-          <TextInput 
+          <ErrorableTextInput 
             ref='bookAuthor'
             style={styles.input} 
             value={this.state.book.author}

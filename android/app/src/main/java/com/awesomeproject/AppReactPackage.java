@@ -28,6 +28,10 @@ public class AppReactPackage implements ReactPackage {
 
     @Override
     public List<ViewManager> createViewManagers(ReactApplicationContext reactContext) {
-        return Collections.emptyList();
+        List<ViewManager> viewManagers = new ArrayList<>();
+
+        viewManagers.add(new ErrorableEditTextManager());
+
+        return viewManagers;
     }
 }

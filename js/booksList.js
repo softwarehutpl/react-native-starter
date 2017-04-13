@@ -42,7 +42,7 @@ class BooksList extends Component {
               </View>
             </TouchableNativeFeedback>
           }
-          keyExtractor={(item) => item.author + item.title}
+          keyExtractor={(item) => item.id}
         />
       </View>
     );
