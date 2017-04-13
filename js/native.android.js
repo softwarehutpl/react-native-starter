@@ -19,8 +19,10 @@ var errorableEditTextInterface = {
 
 const ErrorableEditText = requireNativeComponent('ErrorableEditText', errorableEditTextInterface);
 const CustomToastAndroid = NativeModules.CustomToastAndroid;
+const AppLifecycleAndroid = NativeModules.AppLifecycleAndroid;
 
 module.exports = {
+  AppLifecycleAndroid,
   CustomToastAndroid,
   ErrorableEditText
 }

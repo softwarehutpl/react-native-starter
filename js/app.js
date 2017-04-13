@@ -1,4 +1,9 @@
-import { StackNavigator } from 'react-navigation';
+import React, { Component } from 'react';
+import { 
+  StackNavigator,
+  addNavigationHelpers
+ } from 'react-navigation';
+import { connect } from 'react-redux';
 import HomeScreen from './home';
 import BooksList from './booksList';
 import BookEdit from './bookEdit';
@@ -10,4 +15,25 @@ const App = StackNavigator({
   BookEdit: { screen: BookEdit },
 });
 
-module.exports = App;
+// wrap main navigation component with helper methods in order to integrate the React Navigation with redux https://reactnavigation.org/docs/guides/redux
+class AppWithNavigation extends Component {
+  render() {
+    return (
+      <App navigation={addNavigationHelpers({
+        dispatch: this.props.dispatch,
+        state: this.props.nav,
+      })} />
+    );
+  }
+}
+
+const AppWithNavigationState = connect(
+  state => ({
+    nav: state.nav,
+  }))(AppWithNavigation);
+
+
+module.exports = {
+  App,
+  AppWithNavigationState,
+};
