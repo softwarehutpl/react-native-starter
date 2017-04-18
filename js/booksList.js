@@ -5,11 +5,13 @@ import {
   FlatList,
   Button,
   TouchableNativeFeedback,
-  View
+  View,
+  Alert
 } from 'react-native';
 import { connect } from 'react-redux';
 import commonStyles from './styles/common';
 import styles from './styles/bookList';
+import { removeBook } from './actions/books';
 
 class BooksList extends Component {
   static navigationOptions = {
@@ -21,6 +23,22 @@ class BooksList extends Component {
   	  return {right};
     }
   };
+
+  handleBookLongPress = (book) => {
+    Alert.alert(
+      'Confirm delete',
+      `Are you sure you want to delete the following book?\nTitle: ${book.title}\nAuthor: ${book.author}\n`,
+      [
+        {text: 'No'},
+        {text: 'Yes', onPress: () => this.handleBookDelete(book)}
+      ]
+    );
+  }
+
+  handleBookDelete(book) {
+    this.props.removeBook(book);
+  }
+
   render() {
     const { navigate } = this.props.navigation;
     return (
@@ -33,9 +51,13 @@ class BooksList extends Component {
         <FlatList
           ref="flatList"
           data={this.props.books}
+          initialNumToRender={30}
           ItemSeparatorComponent={SeparatorComponent}
           renderItem={({item}) => 
-            <TouchableNativeFeedback onPress={() => navigate('BookEdit', { book: item })}>
+            <TouchableNativeFeedback 
+              onPress={() => navigate('BookEdit', { book: item })}
+              onLongPress={() => this.handleBookLongPress(item)}
+              >
               <View style={styles.tableRowContainer}>
                 <Text style={styles.tableRowItem}>{item.title}</Text>
                 <Text style={styles.tableRowItem}>{item.author}</Text>
@@ -61,4 +83,10 @@ function select(store) {
   };
 }
 
-module.exports = connect(select)(BooksList);
+function actions(dispatch) {
+  return {
+    removeBook: (book) => dispatch(removeBook(book)),
+  };
+}
+
+module.exports = connect(select, actions)(BooksList);

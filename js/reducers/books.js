@@ -15,6 +15,11 @@ function books(state = {books:[]}, action) {
       ...state,
       books: editBook(action.book, state.books)
     }
+  } else if (action.type === 'REMOVE_BOOK') {
+    return {
+      ...state,
+      books: removeBook(action.book, state.books)
+    }
   }
   return state;
 }
@@ -24,7 +29,7 @@ function books(state = {books:[]}, action) {
 */ 
 function addBook(book, list) {
   book.id = getNextBookId(list);
-  return [...list, book];
+  return [...list, Object.assign({}, book)]; // we need to create copy of the book of otherwise we can have duplicates in the list if someone will try to add the same book a few times
 }
 
 /* Edits book by copying all object's properties and creates a new list to make sure the list won't be shallow-equal
@@ -38,6 +43,10 @@ function editBook(book, list) {
     }
   }
   return [...list];
+}
+
+function removeBook(book, list) {
+  return list.filter((obj) => obj.id !== book.id);
 }
 
 function getNextBookId(list) {
