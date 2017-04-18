@@ -2,10 +2,12 @@ import { createStore, compose } from 'redux';
 import { persistStore, autoRehydrate } from 'redux-persist';
 import React from 'react';
 import { Provider } from 'react-redux';
-import { AsyncStorage, View, Platform, BackAndroid } from 'react-native';
-import { AppWithNavigationState } from '../js/app';
+import { AsyncStorage, View, Platform, BackAndroid, Animated } from 'react-native';
+import { App, AppWithNavigationState } from '../js/app';
 import reducers from '../js/reducers';
 import { NavigationActions } from 'react-navigation';
+import reactMixin from 'react-mixin';
+import TimerMixin from 'react-timer-mixin';
 
 let initialBooks = [
   { id: 0,
@@ -37,6 +39,7 @@ const persistConfig = {
 }
 
 const APP_LOADED_TIMESTAMP_STORAGE_KEY = 'APP_LOADED_TIMESTAMP_STORAGE_KEY';
+const MIN_SPLASH_SHOW_TIME_MS = 2000;
 
 function setup() {
 
@@ -44,7 +47,14 @@ function setup() {
     state = {
       rehydrated: false,
       store: this._configureStore(() => { this._storeLoaded() } ),
+      rootViewOpacity: new Animated.Value(0),
     };
+
+    constructor() {
+      super();
+      this.nativeAppStartTimestamp = 0;
+      this.nativeMainActivityStartTimestamp = 0;
+    }
 
     _storeLoaded = async () => {
       if (Platform.OS === 'android') {
@@ -60,14 +70,15 @@ function setup() {
         */
 
         const AppLifecycleAndroid = require('./native').AppLifecycleAndroid;
-        const timestamp = await AppLifecycleAndroid.getAppLoadedTimestamp();
+        this.nativeAppStartTimestamp = await AppLifecycleAndroid.getAppLoadedTimestamp();
+        this.nativeMainActivityStartTimestamp = await AppLifecycleAndroid.getMainActivityAppLoadedTimestamp();
         let oldTimestamp = null;
         try {
           oldTimestamp = await AsyncStorage.getItem(APP_LOADED_TIMESTAMP_STORAGE_KEY);
         } catch (ignored) {}
-        if (oldTimestamp !== timestamp) {
+        if (oldTimestamp !== this.nativeAppStartTimestamp) {
           try {
-            await AsyncStorage.setItem(APP_LOADED_TIMESTAMP_STORAGE_KEY, timestamp);
+            await AsyncStorage.setItem(APP_LOADED_TIMESTAMP_STORAGE_KEY, this.nativeAppStartTimestamp);
           } catch (ignored) {}
 
           this._resetNavigationState();
@@ -103,7 +114,39 @@ function setup() {
     }
 
     _finishLoading() {
+      const timeSinceMainActivityStartMs = new Date().getTime() - this.nativeMainActivityStartTimestamp;
+
+      // it's not very useful to show the splash screen for at least MIN_SPLASH_SHOW_TIME_MS instead of showing the app immedietaly once it's ready
+      // but I've wanted to present the connection between the JS, Android and events on the Android part
+      if (timeSinceMainActivityStartMs < MIN_SPLASH_SHOW_TIME_MS) {
+        let timeLeftMs = MIN_SPLASH_SHOW_TIME_MS - timeSinceMainActivityStartMs;
+        this.setTimeout(() => {
+          this._markAppLoaded();
+        }, timeLeftMs);
+        return;
+      }
+
+      this._markAppLoaded();
+    }
+
+    _animateAppLoad(callback) {
+      Animated.timing(
+        this.state.rootViewOpacity, {
+          toValue: 1,
+          duration: 500,
+          useNativeDriver: true,
+        }
+      ).start(callback);
+    }
+
+    _markAppLoaded() {
       this.setState({ rehydrated: true });
+      if (Platform.OS === 'android') {
+        this._animateAppLoad(() => {
+          const AppLifecycleAndroid = require('./native').AppLifecycleAndroid;
+          AppLifecycleAndroid.markAppReady();
+        });
+      }
     }
 
     componentDidMount() {
@@ -134,19 +177,23 @@ function setup() {
     }
 
     render() {
-      // loading data stored in AsyncStorage is asynchronous so we need to delay it until the rehydration completes (we can show some loading bar but it take just miliseconds so don't bother and display simple View)
+      // loading data stored in AsyncStorage is asynchronous so we need to delay displaying main app until the rehydration completes
       if(!this.state.rehydrated){
         return (
           <View/>
         );
       }
       return (
-        <Provider store={this.state.store}>
-          <AppWithNavigationState />
-        </Provider>
+        <Animated.View style={{flex: 1, opacity: this.state.rootViewOpacity}}>
+          <Provider store={this.state.store}>
+            <AppWithNavigationState />
+          </Provider>
+        </Animated.View>
       );
     }
   }
+
+  reactMixin(Root.prototype, TimerMixin);
 
   return Root;
 }
