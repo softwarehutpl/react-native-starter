@@ -1,3 +1,11 @@
+// @flow
+
+'use strict';
+
+declare module 'native.android' {
+  declare module.exports: any;
+}
+
 import { PropTypes } from 'react';
 import { 
   NativeModules,

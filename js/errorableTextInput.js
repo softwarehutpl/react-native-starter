@@ -1,3 +1,7 @@
+// @flow
+
+'use strict';
+
 import React, { Component } from 'react';
 import { 
   TouchableWithoutFeedback,
@@ -5,9 +9,6 @@ import {
   Platform,
   TextInput,
 } from 'react-native';
-import {
-  ErrorableEditText,
-} from './native';
 
 
 class ErrorableTextInput extends Component {
@@ -25,7 +26,7 @@ class ErrorableTextInput extends Component {
     this.refs.input.blur();
   }
 
-  setError(errorText) {
+  setError(errorText: string) {
     if (ErrorableTextInput.supportsInlineErrorText()) {
       this.setState({ errorText: errorText });
     } else if (errorText) {
@@ -51,7 +52,7 @@ class ErrorableTextInput extends Component {
 
   render() {
     if (ErrorableTextInput.supportsInlineErrorText()) {
-      const ErrorableEditText = require('./native').ErrorableEditText;
+      const ErrorableEditText = require('./native.android').ErrorableEditText;
       return (
         <TouchableWithoutFeedback
           onPress={this._onPress}>

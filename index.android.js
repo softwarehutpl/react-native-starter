@@ -1,3 +1,7 @@
+// @flow
+
+'use strict';
+
 import {
   AppRegistry,
 } from 'react-native';

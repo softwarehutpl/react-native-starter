@@ -1,3 +1,7 @@
+// @flow
+
+'use strict';
+
 import { createStore, compose } from 'redux';
 import { persistStore, autoRehydrate } from 'redux-persist';
 import React from 'react';
@@ -44,10 +48,16 @@ const MIN_SPLASH_SHOW_TIME_MS = 2000;
 function setup() {
 
   class Root extends React.Component {
+
+    nativeAppStartTimestamp: number;
+    nativeMainActivityStartTimestamp: number;
+    setTimeout: Function;
+
     state = {
       rehydrated: false,
       store: this._configureStore(() => { this._storeLoaded() } ),
       rootViewOpacity: new Animated.Value(0),
+      nativeAppStartTimestamp: 0,
     };
 
     constructor() {
@@ -69,7 +79,7 @@ function setup() {
            'AppLifecycleModule.java' files for details on the Android implementation.).
         */
 
-        const AppLifecycleAndroid = require('./native').AppLifecycleAndroid;
+        const AppLifecycleAndroid = require('./native.android').AppLifecycleAndroid;
         this.nativeAppStartTimestamp = await AppLifecycleAndroid.getAppLoadedTimestamp();
         this.nativeMainActivityStartTimestamp = await AppLifecycleAndroid.getMainActivityAppLoadedTimestamp();
         let oldTimestamp = null;
@@ -143,7 +153,7 @@ function setup() {
       this.setState({ rehydrated: true });
       if (Platform.OS === 'android') {
         this._animateAppLoad(() => {
-          const AppLifecycleAndroid = require('./native').AppLifecycleAndroid;
+          const AppLifecycleAndroid = require('./native.android').AppLifecycleAndroid;
           AppLifecycleAndroid.markAppReady();
         });
       }

@@ -1,3 +1,7 @@
+// @flow
+
+'use strict';
+
 import React, { Component } from 'react';
 import {
   StyleSheet,
@@ -23,8 +27,11 @@ class BookEdit extends Component {
     addBook: this.handleAddBook.bind(this),
     editBook: this.handleEditBook.bind(this),
   }
-  static navigationOptions = {
-    title: ({ state }) => state.params && state.params.book ? 'Edit book' : 'New book',
+  static navigationOptions = ({ navigation }) => {
+    const {state} = navigation;
+    return {
+      title: state.params && state.params.book ? 'Edit book' : 'New book',
+    }
   };
 
   componentWillMount() {

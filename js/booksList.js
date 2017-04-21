@@ -1,3 +1,7 @@
+// @flow
+
+'use strict';
+
 import React, { Component } from 'react';
 import {
   StyleSheet,
@@ -14,13 +18,13 @@ import styles from './styles/bookList';
 import { removeBook } from './actions/books';
 
 class BooksList extends Component {
-  static navigationOptions = {
-    title: 'Books list',
-    header: ({navigate}) => {
-      let right = (
+  static navigationOptions = ({ navigation }) => {
+    const {navigate} = navigation;
+    return {
+      title: 'Books list',
+      headerRight: (
       	<Button title="Add book" onPress={() => navigate('BookEdit')} />
-  	  );
-  	  return {right};
+      ),
     }
   };
 

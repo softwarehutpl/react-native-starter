@@ -1,3 +1,7 @@
+// @flow
+
+'use strict';
+
 import { combineReducers } from 'redux';
 
 // defines all available reducers
